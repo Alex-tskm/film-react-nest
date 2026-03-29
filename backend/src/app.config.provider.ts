@@ -1,18 +1,97 @@
-import {ConfigModule} from "@nestjs/config";
+import { ConfigService } from '@nestjs/config';
+import { Provider } from '@nestjs/common';
 
-export const configProvider = {
-    imports: [ConfigModule.forRoot()],
-    provide: 'CONFIG',
-    useValue: < AppConfig> {
-        //TODO прочесть переменнные среды
+/**
+ * Провайдер конфигурации для NestJS-приложения
+ * Предоставляет объект конфигурации под токеном 'CONFIG'
+ * Используется для централизованного доступа к настройкам приложения
+ */
+export const configProvider: Provider = {
+  /**
+   * Токен, по которому будет доступен объект конфигурации
+   * Другие модули могут внедрять конфигурацию через @Inject('CONFIG')
+   */
+  provide: 'CONFIG',
+
+  /**
+   * Фабрика для создания объекта конфигурации
+   * Позволяет динамически формировать конфигурацию на основе переменных окружения
+   * @param configService - сервис NestJS для работы с конфигурацией
+   * @returns объект AppConfig с настройками приложения
+   */
+  useFactory: (configService: ConfigService) => ({
+    /**
+     * Секция настроек базы данных
+     * Содержит информацию о драйвере и строке подключения
+     */
+    database: {
+      /**
+       * Драйвер базы данных (например, 'mongodb')
+       * Берётся из переменной окружения DATABASE_DRIVER
+       * Если переменная не задана, используется значение по умолчанию 'mongodb'
+       */
+      driver: configService.get<string>('DATABASE_DRIVER', 'mongodb'),
+
+      /**
+       * Строка подключения к базе данных
+       * Берётся из переменной окружения DATABASE_URL
+       * Значение по умолчанию не задано — если переменная не установлена, будет undefined
+       */
+      url: configService.get<string>('DATABASE_URL'),
     },
-}
 
+    /**
+     * Порт, на котором будет запущен сервер
+     * Берётся из переменной окружения PORT
+     * Если переменная не задана, используется значение по умолчанию 3000
+     */
+    port: configService.get<number>('PORT', 3000),
+  }),
+
+  /**
+   * Список зависимостей, которые нужно внедрить в useFactory
+   * В данном случае требуется ConfigService от NestJS
+   * NestJS автоматически предоставит экземпляр ConfigService при создании конфигурации
+   */
+  inject: [ConfigService],
+};
+
+/**
+ * Основной интерфейс конфигурации приложения
+ * Описывает структуру объекта, который будет предоставляться под токеном 'CONFIG'
+ */
 export interface AppConfig {
-    database: AppConfigDatabase
+  /**
+   * Настройки подключения к базе данных
+   * Соответствуют структуре AppConfigDatabase
+   */
+  database: AppConfigDatabase;
+
+  /**
+   * Порт для запуска сервера
+   * Тип number — ожидается числовое значение
+   */
+  port: number;
 }
 
+/**
+ * Интерфейс настроек базы данных
+ * Описывает обязательные поля для конфигурации БД
+ */
 export interface AppConfigDatabase {
-    driver: string
-    url: string
+  /**
+   * Драйвер базы данных
+   * Например: 'mongodb', 'postgresql' и т. д.
+   * Тип string — текстовое значение
+   */
+  driver: string;
+
+  /**
+   * Строка подключения (connection string)
+   * Содержит всю необходимую информацию для подключения к БД:
+   * хост, порт, имя базы, учётные данные и т. д.
+   * Пример: 'mongodb://localhost:27017/afisha'
+   * Тип string — текстовое значение
+   */
+  url: string;
 }

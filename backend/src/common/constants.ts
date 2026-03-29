@@ -1,0 +1,1 @@
+export const FILMS_REPOSITORY = 'FILMS_REPOSITORY';
