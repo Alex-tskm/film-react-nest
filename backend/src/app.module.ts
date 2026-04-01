@@ -6,7 +6,6 @@ import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as path from 'path';
 
-
 @Module({
   imports: [
     // Настраиваем модуль конфигурации NestJS
@@ -36,7 +35,9 @@ import * as path from 'path';
         // Если есть ошибки валидации, выбрасываем исключение с описанием проблем
         // Приложение не запустится, пока все обязательные параметры не будут заданы
         if (errors.length > 0) {
-          throw new Error(`Configuration validation failed: ${errors.join(', ')}`);
+          throw new Error(
+            `Configuration validation failed: ${errors.join(', ')}`,
+          );
         }
 
         // Возвращаем конфигурацию, если валидация пройдена успешно
@@ -45,12 +46,12 @@ import * as path from 'path';
     }),
 
     // Настраиваем статическую отдачу файлов (например, изображений, CSS, JS)
-    ServeStaticModule.forRoot({      
+    ServeStaticModule.forRoot({
       // Корневая папка с статическими файлами (относительно текущей директории)
-      rootPath: path.join(__dirname, '..', 'public'), 
+      rootPath: path.join(__dirname, '..', 'public'),
       // URL‑путь, по которому будут доступны статические файлы
       // Например: http://localhost:3000/content/image.jpg
-      renderPath: '/content',  
+      renderPath: '/content',
       // Исключаем API‑эндпоинты из статической отдачи
       // Запросы к /api/... не будут обрабатываться как статические файлы
       exclude: ['/api/(.*)'],
@@ -60,8 +61,8 @@ import * as path from 'path';
         index: false,
         // Устанавливаем время кеширования файлов в браузере (1 час)
         // Это снижает нагрузку на сервер за счёт локального кеширования
-        maxAge: '1h'
-      }
+        maxAge: '1h',
+      },
     }),
 
     // Асинхронно настраиваем подключение к MongoDB на основе конфигурации
@@ -72,7 +73,7 @@ import * as path from 'path';
       useFactory: (configService: ConfigService) => ({
         // Получаем строку подключения к БД из переменных окружения через ConfigService
         // Пример значения: mongodb://localhost:27017/afisha
-        uri: configService.get<string>('DATABASE_URL')
+        uri: configService.get<string>('DATABASE_URL'),
       }),
       // Внедряем ConfigService для доступа к конфигурации в фабричной функции
       inject: [ConfigService],

@@ -14,7 +14,6 @@ export class FilmsController {
   // private readonly гарантирует, что свойство доступно только внутри класса и не может быть изменено
   constructor(private readonly filmsService: FilmsService) {}
 
-
   // GET /films — получает список всех фильмов
   @Get()
   async getFilms(): Promise<FilmsListResponseDto> {
@@ -28,7 +27,7 @@ export class FilmsController {
       // Общее количество фильмов в ответе
       total: films.length,
       // Массив фильмов — непосредственно данные
-      items: films
+      items: films,
     };
   }
 
@@ -53,7 +52,9 @@ export class FilmsController {
 
   // GET /films/:id/schedule — получает расписание сеансов для фильма по ID
   @Get(':id/schedule')
-  async getFilmSchedule(@Param('id') id: string): Promise<ScheduleListResponseDto> {
+  async getFilmSchedule(
+    @Param('id') id: string,
+  ): Promise<ScheduleListResponseDto> {
     // Получаем расписание сеансов для фильма через сервис
     const schedule = await this.filmsService.getFilmSchedules(id);
 
@@ -64,7 +65,7 @@ export class FilmsController {
       // Общее количество сеансов в расписании
       total: schedule.length,
       // Массив сеансов — непосредственно данные расписания
-      items: schedule
+      items: schedule,
     };
   }
 }

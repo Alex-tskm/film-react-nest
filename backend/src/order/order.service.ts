@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { FilmsService } from '../films/films.service';
 import { v4 as uuidv4 } from 'uuid';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,12 +8,45 @@ import {
   CreateOrderDto,
   OrderResponseDto,
   OrderResponseItemDto,
-  OrderItemDto
+  OrderItemDto,
 } from './dto/order.dto';
+import { ScheduleDto } from '../films/dto/films.dto';
+
+// Интерфейс для типизации ошибок — гарантирует доступ к полям message и stack
+interface ErrorWithMessage {
+  message: string;
+  stack?: string;
+}
+
+// Проверяет, соответствует ли ошибка интерфейсу ErrorWithMessage
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  );
+}
+
+// Преобразует любую ошибку в объект с полем message
+function toErrorWithMessage(err: unknown): ErrorWithMessage {
+  if (isErrorWithMessage(err)) return err;
+  try {
+    return new Error(JSON.stringify(err));
+  } catch {
+    // fallback: преобразуем в строку, если JSON.stringify не сработал
+    return new Error(String(err));
+  }
+}
+
+// Извлекает текстовое сообщение из ошибки любого типа
+function getErrorMessage(error: unknown): string {
+  return toErrorWithMessage(error).message;
+}
 
 @Injectable()
 export class OrderService {
-  // Создаём экземпляр логгера для отслеживания операций и ошибок
+  // Логгер для отслеживания операций и ошибок
   private readonly logger = new Logger(OrderService.name);
 
   constructor(
@@ -32,13 +61,17 @@ export class OrderService {
    */
   async createOrder(orderData: CreateOrderDto): Promise<OrderResponseDto> {
     const { email, phone, tickets } = orderData;
-    // Массив для хранения созданных билетов с уникальными ID
-    const responseItems: OrderResponseItemDto[] = [];
-    // Массив для отслеживания обновлений сеансов (может использоваться для отката в случае ошибки)
-    const sessionUpdates: { filmId: string; sessionId: string; seats: string[] }[] = [];
+    const responseItems: OrderResponseItemDto[] = []; // Массив для хранения созданных билетов с уникальными ID
+    const sessionUpdates: {
+      filmId: string;
+      sessionId: string;
+      seats: string[];
+    }[] = [];
+
+    let seatsToBookCount = 0;
 
     try {
-      // Группируем билеты по комбинации «фильм + сеанс» для обработки
+      // Группируем билеты по комбинации «фильм + сеанс» для пакетной обработки
       const groupedBySession = this.groupBySession(tickets);
 
       for (const [sessionKey, items] of Object.entries(groupedBySession)) {
@@ -48,13 +81,17 @@ export class OrderService {
           // Получаем данные о сеансе из сервиса фильмов
           const schedule = await this.filmsService.getFilmSchedule(filmId, sessionId);
 
-          // Проверяем соответствие времени и цены для всех билетов в группе
+          // Проверяем соответствие цены для всех билетов в группе
           this.validateScheduleData(items, schedule);
 
           // Формируем массив строк вида «ряд:место» для бронирования
           const seatsToBook = items.map((item) => `${item.row}:${item.seat}`);
-          // Проверяем доступность и бронируем места
-          await this.validateAndBookSeats(filmId, sessionId, seatsToBook, schedule, null);
+          
+          // Сохраняем длину массива в переменную, объявленную вне try
+          seatsToBookCount = seatsToBook.length;
+
+          // Проверяем доступность и бронируем места в БД
+          await this.validateAndBookSeats(filmId, sessionId, seatsToBook, schedule);
 
           // Создаём объекты билетов с уникальными UUID
           for (const item of items) {
@@ -65,8 +102,18 @@ export class OrderService {
           }
 
           this.logger.log(`Successfully booked ${seatsToBook.length} seats for film ${filmId}, session ${sessionId}`);
-        } catch (error) {
-          this.logger.error(`Booking failed for film ${filmId}, session ${sessionId}:`, error.stack);
+        } catch (error: unknown) {
+          const errorMessage = getErrorMessage(error);
+          this.logger.error(
+            `Booking failed for film ${filmId}, session ${sessionId}: ${errorMessage}`,
+            {
+              error: errorMessage,
+              stack: isErrorWithMessage(error) ? error.stack : undefined,
+              filmId,
+              sessionId,
+              seatsToBookCount,
+            }
+          );
           throw error;
         }
       }
@@ -76,25 +123,32 @@ export class OrderService {
         total: responseItems.length, // общее количество забронированных билетов
         items: responseItems, // массив билетов с уникальными ID
       };
-    } catch (error) {
-      // Логгируем общую ошибку создания заказа
-      this.logger.error('Order creation failed', error.stack);
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error('Order creation failed', {
+        error: errorMessage,
+        stack: isErrorWithMessage(error) ? error.stack : undefined,
+        inputData: {
+          email,
+          phone,
+          ticketsCount: tickets.length,
+        },
+      });
       throw error;
     }
   }
 
   /**
-   * Проверяет соответствие времени сеанса и цены в заказе данным из БД
+   * Проверяет соответствие цены в заказе данным из БД
    * @param items Массив билетов в заказе
    * @param schedule Данные о сеансе из БД
    */
-  private validateScheduleData(items: OrderItemDto[], schedule: any) {
+  private validateScheduleData(items: OrderItemDto[], schedule: ScheduleDto) {
     for (const item of items) {
-//      if (schedule.daytime !== item.daytime) {
-//        throw new BadRequestException(`Daytime mismatch for film ${item.film}, session ${item.session}`);
-//      }
       if (schedule.price !== item.price) {
-        throw new BadRequestException(`Price mismatch for film ${item.film}, session ${item.session}`);
+        throw new BadRequestException(
+          `Price mismatch for film ${item.film}, session ${item.session}`
+        );
       }
     }
   }
@@ -111,9 +165,9 @@ export class OrderService {
     filmId: string,
     sessionId: string,
     seatsToBook: string[],
-    schedule: any,
-    session: any,
-  ) {
+    schedule: ScheduleDto,    
+  ) {    
+
     this.logger.debug('Starting seat validation and booking process', {
       filmId,
       sessionId,
@@ -123,8 +177,8 @@ export class OrderService {
         rows: schedule.rows,
         seats: schedule.seats,
         takenCount: schedule.taken?.length || 0,
-        takenSeats: schedule.taken || []
-      }
+        takenSeats: schedule.taken || [],
+      },
     });
 
     // Проверка валидности мест по отдельности
@@ -145,20 +199,19 @@ export class OrderService {
     const query = {
       id: filmId,
       'schedule.id': sessionId,
-      'schedule.taken': { $nin: seatsToBook }
+      'schedule.taken': { $nin: seatsToBook },
     };
 
     const update = {
       $addToSet: {
-        'schedule.$.taken': { $each: seatsToBook }
-      }
+        'schedule.$.taken': { $each: seatsToBook },
+      },
     };
 
-    // Убрали передачу сессии в options
     this.logger.debug('MongoDB query prepared', {
       query,
       update,
-      options: { hasSession: false } // явно указываем, что сессии нет
+      options: { hasSession: false }, // явно указываем, что сессии нет
     });
 
     try {
@@ -169,25 +222,26 @@ export class OrderService {
       this.logger.debug('MongoDB query executed', {
         matchedCount: result.matchedCount,
         modifiedCount: result.modifiedCount,
-        upsertedId: result.upsertedId
+        upsertedId: result.upsertedId,
       });
 
       // Проверка результата обновления
       if (result.modifiedCount === 0) {
         // Дополнительная диагностика: проверяем, какие места уже заняты
-        const filmDoc = await this.filmModel.findOne(
-          { id: filmId, 'schedule.id': sessionId },
-          { 'schedule.$': 1 }
-        ).exec();
+        const filmDoc = await this.filmModel
+          .findOne({ id: filmId, 'schedule.id': sessionId }, { 'schedule.$': 1 })
+          .exec();
 
         const currentTaken = filmDoc?.schedule?.[0]?.taken || [];
-        const conflictingSeats = seatsToBook.filter(seat => currentTaken.includes(seat));
+        const conflictingSeats = seatsToBook.filter((seat) =>
+          currentTaken.includes(seat)
+        );
 
         this.logger.warn('No seats were booked', {
-          reason: 'No documents modified',
+          reason: 'No documents modified',          
           currentTakenSeats: currentTaken,
           conflictingSeats,
-          seatsToBook
+          seatsToBook,
         });
 
         throw new BadRequestException(
@@ -199,17 +253,18 @@ export class OrderService {
         bookedSeatsCount: seatsToBook.length,
         bookedSeats: seatsToBook,
         filmId,
-        sessionId
+        sessionId,
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error);
       this.logger.error('Error during seat booking process', {
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: isErrorWithMessage(error) ? error.stack : undefined,
         filmId,
         sessionId,
         seatsToBook,
         query,
-        update
+        update,
       });
       throw error;
     }
@@ -220,7 +275,9 @@ export class OrderService {
    * @param items Массив всех билетов в заказе
    * @returns Record<string, OrderItemDto[]> Объект, где ключ — «filmId|sessionId», значение — массив билетов
    */
-  private groupBySession(items: OrderItemDto[]): Record<string, OrderItemDto[]> {
+  private groupBySession(
+    items: OrderItemDto[],
+  ): Record<string, OrderItemDto[]> {
     const grouped: Record<string, OrderItemDto[]> = {};
     for (const item of items) {
       const key = `${item.film}|${item.session}`;

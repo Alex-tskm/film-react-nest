@@ -9,7 +9,7 @@ export class FilmResponseDto {
   cover: string;
   title: string;
   about: string;
-  description: string;  
+  description: string;
 }
 
 // DTO для элемента расписания в ответе

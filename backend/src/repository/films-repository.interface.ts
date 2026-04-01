@@ -1,4 +1,4 @@
-import { FilmResponseDto, ScheduleDto } from '../dto/films.dto';
+import { FilmResponseDto, ScheduleDto } from '../films/dto/films.dto';
 
 // Интерфейс репозитория для работы с данными о фильмах и расписаниях.
 // Определяет контракт, которому должна соответствовать любая реализация репозитория.

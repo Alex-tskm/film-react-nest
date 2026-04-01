@@ -1,23 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Film } from '../schemas/film.schema';
+import { Film } from '../films/schemas/film.schema';
 import { FilmsRepositoryInterface } from './films-repository.interface';
 import {
   FilmResponseDto,
-  ScheduleDto,
-  FilmsListResponseDto,
-  ScheduleListResponseDto
-} from '../dto/films.dto';
-
+  ScheduleDto
+} from '../films/dto/films.dto';
 
 @Injectable()
 export class MongodbFilmsRepository implements FilmsRepositoryInterface {
   private readonly logger = new Logger(MongodbFilmsRepository.name);
 
-
   constructor(@InjectModel(Film.name) private filmModel: Model<Film>) {}
-
 
   /**
    * Получает все фильмы из БД и возвращает их в формате FilmsListResponseDto.
@@ -78,7 +73,9 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
   ): Promise<ScheduleDto | null> {
     try {
       if (!filmId || !scheduleId) {
-        this.logger.warn('Переданы пустые ID фильма или сеанса для поиска расписания');
+        this.logger.warn(
+          'Переданы пустые ID фильма или сеанса для поиска расписания',
+        );
         return null;
       }
 
@@ -120,47 +117,50 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
    * Если фильм или расписание не найдены, возвращает объект с total: 0 и пустым массивом items.
    * @param filmId ID фильма для получения расписания
    */
-	async findAllSchedules(filmId: string): Promise<ScheduleDto[]> {
-		try {
-			if (!filmId) {
-				this.logger.warn('Передан пустой ID фильма для получения расписаний');
-				return [];
-			}
+  async findAllSchedules(filmId: string): Promise<ScheduleDto[]> {
+    try {
+      if (!filmId) {
+        this.logger.warn('Передан пустой ID фильма для получения расписаний');
+        return [];
+      }
 
-			const film = await this.filmModel.findOne({ id: filmId }).exec();
+      const film = await this.filmModel.findOne({ id: filmId }).exec();
 
-			if (!film || !film.schedule) {
-				this.logger.warn(`Для фильма с ID ${filmId} расписания не найдены`);
-				return [];
-			}
+      if (!film || !film.schedule) {
+        this.logger.warn(`Для фильма с ID ${filmId} расписания не найдены`);
+        return [];
+      }
 
-			const schedules = film.schedule as unknown as ScheduleDto[];
+      const schedules = film.schedule as unknown as ScheduleDto[];
 
-			// Конвертируем все даты в string
-			const convertedSchedules = schedules.map(schedule => {
-				const daytime = (schedule.daytime as unknown) instanceof Date
-					? (schedule.daytime as unknown as Date).toISOString()
-					: schedule.daytime;
+      // Конвертируем все даты в string
+      const convertedSchedules = schedules.map((schedule) => {
+        const daytime =
+          (schedule.daytime as unknown) instanceof Date
+            ? (schedule.daytime as unknown as Date).toISOString()
+            : schedule.daytime;
 
-				return {
-					...schedule,
-					daytime
-				};
-			});
+        return {
+          ...schedule,
+          daytime,
+        };
+      });
 
       this.logger.log(
         `Найдено ${convertedSchedules.length} расписаний для фильма с ID ${filmId}`,
       );
 
-			return convertedSchedules.map((schedule) => this.mapToScheduleDto(schedule));
-		} catch (error) {
-			this.logger.error(
-				`Ошибка при получении расписаний для фильма с ID ${filmId}`,
-				error.stack,
-			);
-			throw error;
-		}
-	}
+      return convertedSchedules.map((schedule) =>
+        this.mapToScheduleDto(schedule),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Ошибка при получении расписаний для фильма с ID ${filmId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
 
   /**
    * Обновляет список занятых мест для конкретного сеанса.
@@ -176,7 +176,9 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
   ): Promise<void> {
     try {
       if (!filmId || !scheduleId || !Array.isArray(taken)) {
-        this.logger.warn('Некорректные параметры переданы для обновления занятых мест');
+        this.logger.warn(
+          'Некорректные параметры переданы для обновления занятых мест',
+        );
         throw new Error('Некорректные параметры для обновления занятых мест');
       }
 
@@ -192,7 +194,7 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
         )
         .exec();
 
-      if (result.modifiedCount  === 0) {
+      if (result.modifiedCount === 0) {
         this.logger.warn(
           `Расписание не обновлено для фильма ${filmId}, сеанс ${scheduleId}`,
         );
@@ -217,7 +219,7 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
    */
   private mapToFilmDto(film: Film): FilmResponseDto {
     this.logger.log(`Mapping film with ID: ${film.id}, title: ${film.title}`);
-    
+
     return {
       id: film.id,
       rating: film.rating,
@@ -238,9 +240,10 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
    */
   private mapToScheduleDto(schedule: ScheduleDto): ScheduleDto {
     // Гарантируем, что daytime — строка
-		const daytime = (schedule.daytime as unknown) instanceof Date
-			? (schedule.daytime as unknown as Date).toISOString()
-			: schedule.daytime;
+    const daytime =
+      (schedule.daytime as unknown) instanceof Date
+        ? (schedule.daytime as unknown as Date).toISOString()
+        : schedule.daytime;
 
     return {
       id: schedule.id,
