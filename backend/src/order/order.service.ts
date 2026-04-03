@@ -62,11 +62,6 @@ export class OrderService {
   async createOrder(orderData: CreateOrderDto): Promise<OrderResponseDto> {
     const { email, phone, tickets } = orderData;
     const responseItems: OrderResponseItemDto[] = []; // Массив для хранения созданных билетов с уникальными ID
-    const sessionUpdates: {
-      filmId: string;
-      sessionId: string;
-      seats: string[];
-    }[] = [];
 
     let seatsToBookCount = 0;
 
@@ -79,19 +74,27 @@ export class OrderService {
 
         try {
           // Получаем данные о сеансе из сервиса фильмов
-          const schedule = await this.filmsService.getFilmSchedule(filmId, sessionId);
+          const schedule = await this.filmsService.getFilmSchedule(
+            filmId,
+            sessionId,
+          );
 
           // Проверяем соответствие цены для всех билетов в группе
           this.validateScheduleData(items, schedule);
 
           // Формируем массив строк вида «ряд:место» для бронирования
           const seatsToBook = items.map((item) => `${item.row}:${item.seat}`);
-          
+
           // Сохраняем длину массива в переменную, объявленную вне try
           seatsToBookCount = seatsToBook.length;
 
           // Проверяем доступность и бронируем места в БД
-          await this.validateAndBookSeats(filmId, sessionId, seatsToBook, schedule);
+          await this.validateAndBookSeats(
+            filmId,
+            sessionId,
+            seatsToBook,
+            schedule,
+          );
 
           // Создаём объекты билетов с уникальными UUID
           for (const item of items) {
@@ -101,7 +104,9 @@ export class OrderService {
             });
           }
 
-          this.logger.log(`Successfully booked ${seatsToBook.length} seats for film ${filmId}, session ${sessionId}`);
+          this.logger.log(
+            `Successfully booked ${seatsToBook.length} seats for film ${filmId}, session ${sessionId}`,
+          );
         } catch (error: unknown) {
           const errorMessage = getErrorMessage(error);
           this.logger.error(
@@ -112,7 +117,7 @@ export class OrderService {
               filmId,
               sessionId,
               seatsToBookCount,
-            }
+            },
           );
           throw error;
         }
@@ -147,7 +152,7 @@ export class OrderService {
     for (const item of items) {
       if (schedule.price !== item.price) {
         throw new BadRequestException(
-          `Price mismatch for film ${item.film}, session ${item.session}`
+          `Price mismatch for film ${item.film}, session ${item.session}`,
         );
       }
     }
@@ -165,9 +170,8 @@ export class OrderService {
     filmId: string,
     sessionId: string,
     seatsToBook: string[],
-    schedule: ScheduleDto,    
-  ) {    
-
+    schedule: ScheduleDto,
+  ) {
     this.logger.debug('Starting seat validation and booking process', {
       filmId,
       sessionId,
@@ -193,7 +197,9 @@ export class OrderService {
       this.logger.debug('Seat passed validation', { seat });
     }
 
-    this.logger.debug('All seats passed initial validation, proceeding to DB check');
+    this.logger.debug(
+      'All seats passed initial validation, proceeding to DB check',
+    );
 
     // Подготовка данных для MongoDB-запроса
     const query = {
@@ -229,23 +235,26 @@ export class OrderService {
       if (result.modifiedCount === 0) {
         // Дополнительная диагностика: проверяем, какие места уже заняты
         const filmDoc = await this.filmModel
-          .findOne({ id: filmId, 'schedule.id': sessionId }, { 'schedule.$': 1 })
+          .findOne(
+            { id: filmId, 'schedule.id': sessionId },
+            { 'schedule.$': 1 },
+          )
           .exec();
 
         const currentTaken = filmDoc?.schedule?.[0]?.taken || [];
         const conflictingSeats = seatsToBook.filter((seat) =>
-          currentTaken.includes(seat)
+          currentTaken.includes(seat),
         );
 
         this.logger.warn('No seats were booked', {
-          reason: 'No documents modified',          
+          reason: 'No documents modified',
           currentTakenSeats: currentTaken,
           conflictingSeats,
           seatsToBook,
         });
 
         throw new BadRequestException(
-          `Some seats are already taken or invalid. Conflicting seats: ${conflictingSeats.join(', ')}`
+          `Some seats are already taken or invalid. Conflicting seats: ${conflictingSeats.join(', ')}`,
         );
       }
 

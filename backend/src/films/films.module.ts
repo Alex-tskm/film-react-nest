@@ -26,7 +26,10 @@ import { ConfigService } from '@nestjs/config';
         filmModel: Model<FilmDocument>,
       ) => {
         // Получаем драйвер БД из конфигурации (по умолчанию — 'mongodb')
-        const dbDriver = configService.get<string>('DATABASE_DRIVER', 'mongodb');
+        const dbDriver = configService.get<string>(
+          'DATABASE_DRIVER',
+          'mongodb',
+        );
 
         switch (dbDriver) {
           case 'mongodb':
@@ -34,7 +37,9 @@ import { ConfigService } from '@nestjs/config';
             return new MongodbFilmsRepository(filmModel);
           default:
             // Ошибка при неподдерживаемом драйвере — предотвращает запуск с некорректной конфигурацией
-            throw new Error(`Unsupported database driver: ${dbDriver}. Supported: mongodb`);
+            throw new Error(
+              `Unsupported database driver: ${dbDriver}. Supported: mongodb`,
+            );
         }
       },
       // Зависимости для фабрики: ConfigService и модель Film

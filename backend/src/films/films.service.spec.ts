@@ -123,10 +123,7 @@ describe('FilmsService', () => {
       await expect(service.getFilmSchedule('1', '999')).rejects.toThrow(
         NotFoundException,
       );
-      expect(mockFilmsRepository.findSchedule).toHaveBeenCalledWith(
-        '1',
-        '999',
-      );
+      expect(mockFilmsRepository.findSchedule).toHaveBeenCalledWith('1', '999');
     });
   });
 

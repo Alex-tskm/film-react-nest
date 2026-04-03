@@ -4,14 +4,10 @@ jest.mock('uuid', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrderService } from './order.service';
 import { FilmsService } from '../films/films.service';
-import { Model } from 'mongoose';
-import { Film } from '../films/schemas/film.schema';
 import { CreateOrderDto } from './dto/order.dto';
 
 describe('OrderService', () => {
   let service: OrderService;
-  let filmsService: FilmsService;
-  let filmModel: Model<Film>;
 
   const mockFilmsService = {
     getFilmSchedule: jest.fn(),
@@ -39,8 +35,6 @@ describe('OrderService', () => {
     }).compile();
 
     service = module.get<OrderService>(OrderService);
-    filmsService = module.get<FilmsService>(FilmsService);
-    filmModel = module.get<Model<Film>>('FilmModel');
   });
 
   it('should be defined', () => {
@@ -81,7 +75,10 @@ describe('OrderService', () => {
 
       expect(result.total).toBe(1);
       expect(result.items[0].id).toBeDefined();
-      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith('film1', 'session1');
+      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith(
+        'film1',
+        'session1',
+      );
     });
 
     it('should throw BadRequestException when price mismatch', async () => {
@@ -109,9 +106,9 @@ describe('OrderService', () => {
 
       mockFilmsService.getFilmSchedule.mockResolvedValue(mockSchedule);
 
-      await expect(service.createOrder(createOrderDto))
-        .rejects
-        .toThrow('Price mismatch for film film1, session session1');
+      await expect(service.createOrder(createOrderDto)).rejects.toThrow(
+        'Price mismatch for film film1, session session1',
+      );
     });
   });
 });

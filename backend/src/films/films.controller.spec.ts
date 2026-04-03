@@ -1,12 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FilmsController } from './films.controller';
 import { FilmsService } from './films.service';
-import {
-  FilmsListResponseDto,
-  ScheduleListResponseDto,
-  FilmResponseDto,
-  ScheduleDto
-} from './dto/films.dto';
+import { FilmResponseDto, ScheduleDto } from './dto/films.dto';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FilmsController', () => {

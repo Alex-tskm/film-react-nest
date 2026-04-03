@@ -87,9 +87,9 @@ describe('OrderController', () => {
       const errorMessage = 'Some seats are already taken';
       mockOrderService.createOrder.mockRejectedValue(new Error(errorMessage));
 
-      await expect(controller.createOrder(createOrderDto))
-        .rejects
-        .toThrowError(errorMessage);
+      await expect(controller.createOrder(createOrderDto)).rejects.toThrowError(
+        errorMessage,
+      );
     });
   });
 });

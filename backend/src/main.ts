@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as express from 'express';
+import express, { Application } from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { config } from 'dotenv';
 
@@ -9,24 +9,25 @@ config();
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.create(
+    const app: Application = express();
+    const nestApp = await NestFactory.create(
       AppModule,
-      new ExpressAdapter(express()),
+      new ExpressAdapter(app),
       {
         logger: ['log', 'error', 'warn', 'debug', 'verbose'],
       },
     );
 
     // Устанавливаем глобальный префикс для всех API‑эндпоинтов
-    app.setGlobalPrefix('api/afisha');
+    nestApp.setGlobalPrefix('api/afisha');
 
     // Включаем CORS для разрешения кросс‑доменных запросов
-    app.enableCors();
+    nestApp.enableCors();
 
     // Получаем порт из переменных окружения или используем 3000 по умолчанию
     const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-    await app.listen(port);
+    await nestApp.listen(port);
 
     console.log(
       `🚀 Application is running on: http://localhost:${port}/api/afisha`,

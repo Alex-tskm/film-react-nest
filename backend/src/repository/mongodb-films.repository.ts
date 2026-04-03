@@ -3,10 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Film } from '../films/schemas/film.schema';
 import { FilmsRepositoryInterface } from './films-repository.interface';
-import {
-  FilmResponseDto,
-  ScheduleDto
-} from '../films/dto/films.dto';
+import { FilmResponseDto, ScheduleDto } from '../films/dto/films.dto';
 
 @Injectable()
 export class MongodbFilmsRepository implements FilmsRepositoryInterface {
@@ -239,12 +236,6 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
    * @returns ScheduleDto объект DTO расписания
    */
   private mapToScheduleDto(schedule: ScheduleDto): ScheduleDto {
-    // Гарантируем, что daytime — строка
-    const daytime =
-      (schedule.daytime as unknown) instanceof Date
-        ? (schedule.daytime as unknown as Date).toISOString()
-        : schedule.daytime;
-
     return {
       id: schedule.id,
       daytime: schedule.daytime,
