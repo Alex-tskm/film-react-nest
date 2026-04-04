@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import express, { Application } from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { config } from 'dotenv';
+import { RequestMethod } from '@nestjs/common';
 
 // Инициализируем dotenv до создания приложения
 config();
@@ -19,7 +20,12 @@ async function bootstrap() {
     );
 
     // Устанавливаем глобальный префикс для всех API‑эндпоинтов
-    nestApp.setGlobalPrefix('api/afisha');
+    nestApp.setGlobalPrefix('api/afisha', {
+      exclude: [
+        { path: 'content', method: RequestMethod.ALL },
+        { path: 'content/(.*)', method: RequestMethod.ALL }
+      ]
+    });
 
     // Включаем CORS для разрешения кросс‑доменных запросов
     nestApp.enableCors();

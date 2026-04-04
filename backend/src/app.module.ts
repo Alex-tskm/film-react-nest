@@ -5,6 +5,7 @@ import { FilmsModule } from './films/films.module';
 import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as path from 'path';
+import { ContentController } from './content/content.controller';
 
 @Module({
   imports: [
@@ -54,7 +55,7 @@ import * as path from 'path';
       renderPath: '/content',
       // Исключаем API‑эндпоинты из статической отдачи
       // Запросы к /api/... не будут обрабатываться как статические файлы
-      exclude: ['/api/(.*)'],
+      exclude: ['/api/(.*)', '/content/afisha'],
       // Дополнительные опции для статического сервера
       serveStaticOptions: {
         // Отключаем отображение списка файлов (index.html и т. д.)
@@ -89,7 +90,7 @@ import * as path from 'path';
   providers: [],
   // Список контроллеров этого модуля (в данном случае — пустой)
   // Контроллеры будут добавлены в соответствующих feature‑модулях
-  controllers: [],
+  controllers: [ContentController],
   // Экспортируемые токены и провайдеры, доступные для других модулей
   // Здесь ничего не экспортируется, так как модуль является корневым
   exports: [],
