@@ -93,13 +93,12 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
         return null;
       }
 
-      // Безопасное преобразование типа: сначала к unknown, затем к ScheduleDto
-      const schedule = film.schedule[0] as unknown as ScheduleDto;
+      const plain = (film.schedule[0] as any).toObject() as ScheduleDto;
 
       this.logger.log(
         `Успешно найдено расписание с ID ${scheduleId} для фильма ${filmId}`,
       );
-      return this.mapToScheduleDto(schedule);
+      return this.mapToScheduleDto(plain);
     } catch (error) {
       this.logger.error(
         `Ошибка при поиске расписания с ID ${scheduleId} для фильма ${filmId}`,
@@ -128,28 +127,20 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
         return [];
       }
 
-      const schedules = film.schedule as unknown as ScheduleDto[];
-
-      // Конвертируем все даты в string
-      const convertedSchedules = schedules.map((schedule) => {
-        const daytime =
-          (schedule.daytime as unknown) instanceof Date
-            ? (schedule.daytime as unknown as Date).toISOString()
-            : schedule.daytime;
-
-        return {
-          ...schedule,
-          daytime,
-        };
-      });
-
       this.logger.log(
-        `Найдено ${convertedSchedules.length} расписаний для фильма с ID ${filmId}`,
+        `Найдено ${film.schedule.length} расписаний для фильма с ID ${filmId}`,
       );
 
-      return convertedSchedules.map((schedule) =>
-        this.mapToScheduleDto(schedule),
-      );
+      return film.schedule.map((schedule) => {
+        // toObject() преобразует Mongoose-субдокумент в обычный объект,
+        // чтобы spread корректно захватил все поля схемы
+        const plain = (schedule as any).toObject() as ScheduleDto;
+        const daytime =
+          (plain.daytime as unknown) instanceof Date
+            ? (plain.daytime as unknown as Date).toISOString()
+            : plain.daytime;
+        return this.mapToScheduleDto({ ...plain, daytime });
+      });
     } catch (error) {
       this.logger.error(
         `Ошибка при получении расписаний для фильма с ID ${filmId}`,
@@ -239,7 +230,7 @@ export class MongodbFilmsRepository implements FilmsRepositoryInterface {
     return {
       id: schedule.id,
       daytime: schedule.daytime,
-      hall: schedule.hall,
+      hall: Number(schedule.hall),
       rows: schedule.rows,
       seats: schedule.seats,
       price: schedule.price,

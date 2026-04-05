@@ -11,39 +11,9 @@ import { ContentController } from './content/content.controller';
   imports: [
     // Настраиваем модуль конфигурации NestJS
     ConfigModule.forRoot({
-      // Делаем модуль глобальным — его сервисы доступны во всех модулях приложения
-      // без необходимости повторного импорта в каждом модуле
       isGlobal: true,
-      // Включаем кэширование значений конфигурации для повышения производительности
       cache: true,
-      // Указываем путь к файлу с переменными окружения (.env)
       envFilePath: '.env',
-      // Функция валидации конфигурации — проверяет обязательные параметры при запуске
-      validate: (config) => {
-        const errors: string[] = [];
-
-        // Проверяем наличие обязательного параметра DATABASE_DRIVER
-        // Если переменная не задана, добавляем ошибку в массив
-        if (!config.DATABASE_DRIVER) {
-          errors.push('DATABASE_DRIVER is required');
-        }
-        // Проверяем наличие обязательного параметра PORT
-        // Порт необходим для запуска сервера
-        if (!config.PORT) {
-          errors.push('PORT is required');
-        }
-
-        // Если есть ошибки валидации, выбрасываем исключение с описанием проблем
-        // Приложение не запустится, пока все обязательные параметры не будут заданы
-        if (errors.length > 0) {
-          throw new Error(
-            `Configuration validation failed: ${errors.join(', ')}`,
-          );
-        }
-
-        // Возвращаем конфигурацию, если валидация пройдена успешно
-        return config;
-      },
     }),
 
     // Настраиваем статическую отдачу файлов (например, изображений, CSS, JS)
@@ -74,7 +44,7 @@ import { ContentController } from './content/content.controller';
       useFactory: (configService: ConfigService) => ({
         // Получаем строку подключения к БД из переменных окружения через ConfigService
         // Пример значения: mongodb://localhost:27017/afisha
-        uri: configService.get<string>('DATABASE_URL'),
+        uri: configService.get<string>('DATABASE_URL', 'mongodb://localhost:27017/prac'),
       }),
       // Внедряем ConfigService для доступа к конфигурации в фабричной функции
       inject: [ConfigService],
