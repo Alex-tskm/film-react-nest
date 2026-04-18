@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { FilmsModule } from '../films/films.module';
-import { Film, FilmSchema } from '../films/schemas/film.schema';
+import { FilmEntity } from '../entities/film.entity';
+import { ScheduleEntity } from '../entities/schedule.entity';
 
 @Module({
   imports: [
     FilmsModule,
-    // Подключаем Mongoose для работы с БД
-    MongooseModule.forFeature([{ name: Film.name, schema: FilmSchema }]),
+    // Подключаем TypeORM вместо Mongoose
+    TypeOrmModule.forFeature([FilmEntity, ScheduleEntity]),
   ],
   controllers: [OrderController],
   providers: [OrderService],

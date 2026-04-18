@@ -29,9 +29,9 @@ export class ContentController {
       }
 
       console.log(`📋 Найдено файлов: ${files.length}`);
-      const fileList = files.map(file => ({
+      const fileList = files.map((file) => ({
         name: file,
-        url: `/content/afisha/${file}`
+        url: `/content/afisha/${file}`,
       }));
 
       res.json(fileList);

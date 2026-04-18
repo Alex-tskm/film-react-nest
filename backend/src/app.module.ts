@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { FilmsModule } from './films/films.module';
 import { OrderModule } from './order/order.module';
-import { MongooseModule } from '@nestjs/mongoose';
 import * as path from 'path';
 import { ContentController } from './content/content.controller';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -36,19 +36,8 @@ import { ContentController } from './content/content.controller';
       },
     }),
 
-    // Асинхронно настраиваем подключение к MongoDB на основе конфигурации
-    MongooseModule.forRootAsync({
-      // Гарантируем, что ConfigModule доступен в контексте этого модуля
-      imports: [ConfigModule],
-      // Используем фабричную функцию для динамического создания конфигурации подключения
-      useFactory: (configService: ConfigService) => ({
-        // Получаем строку подключения к БД из переменных окружения через ConfigService
-        // Пример значения: mongodb://localhost:27017/afisha
-        uri: configService.get<string>('DATABASE_URL', 'mongodb://localhost:27017/prac'),
-      }),
-      // Внедряем ConfigService для доступа к конфигурации в фабричной функции
-      inject: [ConfigService],
-    }),
+    // Заменяем MongooseModule на DatabaseModule с TypeORM
+    DatabaseModule,
 
     // Импортируем модуль фильмов — содержит логику работы с фильмами и сеансами
     FilmsModule,

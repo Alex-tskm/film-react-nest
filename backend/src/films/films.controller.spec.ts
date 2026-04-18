@@ -26,7 +26,7 @@ describe('FilmsController', () => {
     {
       id: 'schedule1',
       daytime: '2024-01-15T19:00:00',
-      hall: 'Hall 1',
+      hall: 1,
       rows: 10,
       seats: 100,
       price: 500,

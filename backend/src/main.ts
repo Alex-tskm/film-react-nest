@@ -23,8 +23,8 @@ async function bootstrap() {
     nestApp.setGlobalPrefix('api/afisha', {
       exclude: [
         { path: 'content', method: RequestMethod.ALL },
-        { path: 'content/(.*)', method: RequestMethod.ALL }
-      ]
+        { path: 'content/(.*)', method: RequestMethod.ALL },
+      ],
     });
 
     // Включаем CORS для разрешения кросс‑доменных запросов
