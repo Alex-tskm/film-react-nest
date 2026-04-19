@@ -53,8 +53,8 @@ import { ScheduleEntity } from '../entities/schedule.entity';
           url: databaseUrl,
           username: username,
           password: password,
-          entities: [FilmEntity, ScheduleEntity],
-          synchronize: true,
+          entities: [__dirname + '/../**/*.entity{.ts,.js}'], 
+          synchronize: process.env.NODE_ENV !== 'production',
           logging: true, // Включаем логирование запросов к БД
           logger: 'advanced-console', // Более детальное логирование
           extra: {
