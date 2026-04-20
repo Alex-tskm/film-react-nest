@@ -10,10 +10,9 @@ export class ContentController {
   }
 
   @Get('afisha')
-  getAfishaFiles(@Res() res: Response) {
+  getAfishaImage(@Res() res: Response) {
     console.log('🔎 Получен запрос на /api/content/afisha');
 
-    // Исправленный путь — выберите подходящий вариант
     const contentPath = path.join(process.cwd(), 'public', 'content', 'afisha');
     console.log('📁 Путь к директории:', contentPath);
 
@@ -22,19 +21,15 @@ export class ContentController {
       return res.status(404).send('Directory not found');
     }
 
-    fs.readdir(contentPath, (err, files) => {
-      if (err) {
-        console.error('❌ Ошибка чтения директории:', err);
-        return res.status(500).send('Error reading directory');
-      }
+    const files = fs.readdirSync(contentPath);
+    const firstJpg = files.find((f) => f.endsWith('.jpg'));
 
-      console.log(`📋 Найдено файлов: ${files.length}`);
-      const fileList = files.map((file) => ({
-        name: file,
-        url: `/content/afisha/${file}`,
-      }));
+    if (!firstJpg) {
+      console.error('❌ Изображения не найдены в директории:', contentPath);
+      return res.status(404).send('No images found');
+    }
 
-      res.json(fileList);
-    });
+    console.log(`📋 Отдаём изображение: ${firstJpg}`);
+    res.sendFile(path.join(contentPath, firstJpg));
   }
 }

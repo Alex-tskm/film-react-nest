@@ -16,7 +16,7 @@ export class FilmEntity {
   @Column({ name: 'director', type: 'varchar' })
   director: string;
 
-  @Column({ name: 'tags', type: 'text' })
+  @Column({ name: 'tags', type: 'simple-array' })
   tags: string[];
 
   @Column({ name: 'image', type: 'varchar' })

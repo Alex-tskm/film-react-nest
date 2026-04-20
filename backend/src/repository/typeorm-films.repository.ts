@@ -239,6 +239,7 @@ export class TypeormFilmsRepository implements FilmsRepositoryInterface {
       title: film.title,
       about: film.about,
       description: film.description,
+      schedule: film.schedule ? film.schedule.map((s) => this.mapToScheduleDto(s)) : [],
     };
   }
 

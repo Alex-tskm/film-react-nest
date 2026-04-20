@@ -9,59 +9,43 @@ import { ScheduleEntity } from '../entities/schedule.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => {
-        // Получаем параметры подключения
         const databaseUrl = config.get<string>('DATABASE_URL');
         const username = config.get<string>('DATABASE_USERNAME');
-        const password = config.get<string | undefined>('DATABASE_PASSWORD');
+        const password = config.get<string>('DATABASE_PASSWORD');
+
+        // Встраиваем credentials в URL, чтобы TypeORM не перекрывал их пустыми значениями из URL
+        const url = new URL(databaseUrl);
+        if (username) url.username = encodeURIComponent(username);
+        if (password) url.password = encodeURIComponent(password);
 
         // Логируем типы и значения параметров (для отладки — убрать в продакшене!)
         console.log('=== DATABASE CONFIGURATION DEBUG ===');
         console.log(
           'DATABASE_URL type:',
-          typeof databaseUrl,
+          typeof url,
           'value:',
-          databaseUrl,
+          url,
         );
         console.log(
           'DATABASE_USERNAME type:',
-          typeof username,
+          typeof url.username,
           'value:',
-          username,
+          url.username,
         );
         console.log(
           'DATABASE_PASSWORD type:',
-          typeof password,
+          typeof url.password,
           'value:',
-          password,
+          url.password,
         );
         console.log('==================================');
 
-        // Проверка пароля
-        if (typeof password !== 'string') {
-          throw new Error(
-            `DATABASE_PASSWORD must be a string. Got: ${typeof password}. ` +
-              'Check your .env file and configuration.',
-          );
-        }
-
-        if (!password) {
-          throw new Error('DATABASE_PASSWORD is required but not provided');
-        }
 
         return {
           type: 'postgres',
-          url: databaseUrl,
-          username: username,
-          password: password,
-          entities: [__dirname + '/../**/*.entity{.ts,.js}'], 
+          url: url.toString(),
+          entities: [__dirname + '/../**/*.entity{.ts,.js}'],
           synchronize: process.env.NODE_ENV !== 'production',
-          logging: true, // Включаем логирование запросов к БД
-          logger: 'advanced-console', // Более детальное логирование
-          extra: {
-            // Дополнительные настройки для отладки подключения
-            connectionTimeoutMillis: 10000,
-            idleInTransactionSessionTimeout: 20000,
-          },
         };
       },
       inject: [ConfigService],

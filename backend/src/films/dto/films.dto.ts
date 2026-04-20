@@ -10,6 +10,7 @@ export class FilmResponseDto {
   title: string;
   about: string;
   description: string;
+  schedule: ScheduleDto[];
 }
 
 // DTO для элемента расписания в ответе
