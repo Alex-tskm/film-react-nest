@@ -8,6 +8,16 @@ describe('FilmsService', () => {
   let service: FilmsService;
   let mockFilmsRepository: any;
 
+  const mockSchedule: ScheduleDto = {
+    id: 'schedule1',
+    daytime: '2024-01-15T19:00:00',
+    hall: 1,
+    rows: 10,
+    seats: 100,
+    price: 500,
+    taken: ['A1', 'A2'],
+  };
+
   const mockFilm: FilmResponseDto = {
     id: '1',
     rating: 8.5,
@@ -18,16 +28,7 @@ describe('FilmsService', () => {
     title: 'Film 1',
     about: 'About film 1',
     description: 'Description film 1',
-  };
-
-  const mockSchedule: ScheduleDto = {
-    id: 'schedule1',
-    daytime: '2024-01-15T19:00:00',
-    hall: 1,
-    rows: 10,
-    seats: 100,
-    price: 500,
-    taken: ['A1', 'A2'],
+    schedule: [mockSchedule],
   };
 
   beforeEach(async () => {

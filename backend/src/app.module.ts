@@ -6,7 +6,7 @@ import { OrderModule } from './order/order.module';
 import * as path from 'path';
 import { ContentController } from './content/content.controller';
 import { DatabaseModule } from './database/database.module';
-
+import { LoggerModule } from './logger/logger.module'; 
 @Module({
   imports: [
     // Настраиваем модуль конфигурации NestJS
@@ -15,7 +15,7 @@ import { DatabaseModule } from './database/database.module';
       cache: true,
       envFilePath: '.env',
     }),
-
+    LoggerModule.forRoot(),
     // Настраиваем статическую отдачу файлов (например, изображений, CSS, JS)
     ServeStaticModule.forRoot({
       // Корневая папка с статическими файлами (относительно текущей директории)
