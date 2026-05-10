@@ -67,3 +67,21 @@ VITE_CDN_URL=http://localhost:3000/content/afisha
 `npm run dev`
 
 Приложение откроется по адресу `http://localhost:5173`.
+
+## Настройка логирования
+
+Для выбора формата логов установите переменную `LOG_FORMAT` в файле `.env`:
+
+- `dev` - цветные логи для разработки (по умолчанию)
+- `json` - JSON формат для машинной обработки
+- `tskv` - TSKV формат (Tab-Separated Key-Value)
+
+## Деплой
+
+Проект развёрнут и доступен по адресам:
+
+- **Фронтенд:** http://alex-tskm.students.nomorepartiessite.ru/
+- **API (бэкенд):** http://alex-tskm.students.nomorepartiessite.ru/:3000
+- **PgAdmin:** http://alex-tskm.students.nomorepartiessite.ru/:8080
+  - Логин: `aa@aa.com`
+  - Пароль: `password`
