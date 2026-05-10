@@ -224,7 +224,6 @@ describe('TskvLogger', () => {
       const error = new Error('Test error');
       const result = logger.formatMessage('error', error.message, error.stack);
 
-
       // Проверяем, что уровень лога установлен как 'error'
       expect(result).toContain('level=error');
       // Проверяем наличие сообщения ошибки в поле message
@@ -238,4 +237,3 @@ describe('TskvLogger', () => {
     });
   });
 });
-

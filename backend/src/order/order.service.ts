@@ -130,11 +130,11 @@ export class OrderService {
     for (const item of items) {
       if (schedule.price !== item.price) {
         console.log('Validating prices:', {
-                    schedulePrice: schedule.price,
-                    schedulePriceType: typeof schedule.price,
-                    itemPrice: item.price,
-                    itemPriceType: typeof item.price,
-                    pricesMatch: item.price === schedule.price
+          schedulePrice: schedule.price,
+          schedulePriceType: typeof schedule.price,
+          itemPrice: item.price,
+          itemPriceType: typeof item.price,
+          pricesMatch: item.price === schedule.price,
         });
 
         throw new BadRequestException(

@@ -43,7 +43,11 @@ export class TskvLogger implements LoggerService {
    * @param optionalParams — дополнительные параметры
    * @returns строка в формате TSKV
    */
-  formatMessage(level: string, message: unknown, ...optionalParams: unknown[]): string {
+  formatMessage(
+    level: string,
+    message: unknown,
+    ...optionalParams: unknown[]
+  ): string {
     const fields: string[] = [];
 
     // Обязательные поля

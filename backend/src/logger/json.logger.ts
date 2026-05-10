@@ -33,7 +33,11 @@ export class JsonLogger implements LoggerService {
    * @param optionalParams — дополнительные параметры
    * @returns JSON‑строка с данными лога
    */
-  formatMessage(level: string, message: unknown, ...optionalParams: unknown[]): string {
+  formatMessage(
+    level: string,
+    message: unknown,
+    ...optionalParams: unknown[]
+  ): string {
     const logEntry: Record<string, unknown> = {
       level,
       timestamp: new Date().toISOString(),

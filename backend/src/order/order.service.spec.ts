@@ -5,12 +5,7 @@ jest.mock('uuid', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrderService } from './order.service';
 import { FilmsService } from '../films/films.service';
-import {
-  CreateOrderDto,
-  OrderItemDto,
-  OrderResponseDto,
-  OrderResponseItemDto
-} from './dto/order.dto';
+import { CreateOrderDto, OrderItemDto } from './dto/order.dto';
 import { FILMS_REPOSITORY } from '../common/constants';
 import { FilmsRepositoryInterface } from '../repository/films-repository.interface';
 import { ScheduleDto } from '../films/dto/films.dto';
@@ -46,7 +41,6 @@ describe('OrderService', () => {
       findSchedule: jest.fn(),
       updateScheduleTaken: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<FilmsRepositoryInterface>;
-
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -85,18 +79,28 @@ describe('OrderService', () => {
             daytime: '2024-01-01T19:00:00',
             row: 5,
             seat: 10,
-            price: 500
+            price: 500,
           } as OrderItemDto,
         ],
       };
 
       mockFilmsService.getFilmSchedule.mockResolvedValue({
         ...mockSchedule,
-        price: 500
+        price: 500,
       });
 
-      console.log('Mock schedule type:', typeof mockSchedule.price, 'value:', mockSchedule.price);
-      console.log('Input ticket type:', typeof createOrderDto.tickets[0].price, 'value:', createOrderDto.tickets[0].price);
+      console.log(
+        'Mock schedule type:',
+        typeof mockSchedule.price,
+        'value:',
+        mockSchedule.price,
+      );
+      console.log(
+        'Input ticket type:',
+        typeof createOrderDto.tickets[0].price,
+        'value:',
+        createOrderDto.tickets[0].price,
+      );
 
       const result = await service.createOrder(createOrderDto);
 
@@ -111,16 +115,19 @@ describe('OrderService', () => {
             daytime: '2024-01-01T19:00:00',
             row: 5,
             seat: 10,
-            price: 500
-          })
-        ]
+            price: 500,
+          }),
+        ],
       });
 
-      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith('film1', 'session1');
+      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith(
+        'film1',
+        'session1',
+      );
       expect(mockFilmsRepository.updateScheduleTaken).toHaveBeenCalledWith(
         'film1',
         'session1',
-        ['5:10']
+        ['5:10'],
       );
     });
 
@@ -135,21 +142,24 @@ describe('OrderService', () => {
             daytime: '2024-01-01T19:00:00',
             row: 5,
             seat: 10,
-            price: 600
+            price: 600,
           } as OrderItemDto,
         ],
       };
 
       mockFilmsService.getFilmSchedule.mockResolvedValue({
         ...mockSchedule,
-        price: 500
+        price: 500,
       });
 
       await expect(service.createOrder(createOrderDto)).rejects.toThrow(
-        'Price mismatch for film film1, session session1'
+        'Price mismatch for film film1, session session1',
       );
 
-      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith('film1', 'session1');
+      expect(mockFilmsService.getFilmSchedule).toHaveBeenCalledWith(
+        'film1',
+        'session1',
+      );
     });
   });
 });

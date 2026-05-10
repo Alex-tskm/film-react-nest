@@ -34,15 +34,19 @@ export class DevLogger implements LoggerService {
    * @param optionalParams — дополнительные параметры
    * @returns отформатированная строка для вывода в консоль
    */
-  formatMessage(level: string, message: unknown, ...optionalParams: unknown[]): string {
+  formatMessage(
+    level: string,
+    message: unknown,
+    ...optionalParams: unknown[]
+  ): string {
     const timestamp = new Date().toISOString();
     // Формируем строку с контекстом (если задан): '[Context] '
     const contextStr = this.context ? `[${this.context}] ` : '';
     // Обрабатываем дополнительные параметры: преобразуем в строки и объединяем через пробел
     const paramsStr = optionalParams.length
-      ? ` ${optionalParams.map(p =>
-          typeof p === 'string' ? p : JSON.stringify(p)
-        ).join(' ')}`
+      ? ` ${optionalParams
+          .map((p) => (typeof p === 'string' ? p : JSON.stringify(p)))
+          .join(' ')}`
       : '';
 
     // Собираем итоговую строку: время + уровень + контекст + сообщение + доп. параметры
