@@ -8,6 +8,18 @@ describe('FilmsController', () => {
   let controller: FilmsController;
   let filmsService: jest.Mocked<FilmsService>;
 
+  const mockSchedule: ScheduleDto[] = [
+    {
+      id: 'schedule1',
+      daytime: '2024-01-15T19:00:00',
+      hall: 1,
+      rows: 10,
+      seats: 100,
+      price: 500,
+      taken: ['A1', 'A2'],
+    },
+  ];
+
   const mockFilms: FilmResponseDto[] = [
     {
       id: '1',
@@ -19,18 +31,7 @@ describe('FilmsController', () => {
       title: 'Film 1',
       about: 'About film 1',
       description: 'Description film 1',
-    },
-  ];
-
-  const mockSchedule: ScheduleDto[] = [
-    {
-      id: 'schedule1',
-      daytime: '2024-01-15T19:00:00',
-      hall: 1,
-      rows: 10,
-      seats: 100,
-      price: 500,
-      taken: ['A1', 'A2'],
+      schedule: mockSchedule,
     },
   ];
 

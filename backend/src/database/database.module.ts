@@ -20,12 +20,7 @@ import { ScheduleEntity } from '../entities/schedule.entity';
 
         // Логируем типы и значения параметров (для отладки — убрать в продакшене!)
         console.log('=== DATABASE CONFIGURATION DEBUG ===');
-        console.log(
-          'DATABASE_URL type:',
-          typeof url,
-          'value:',
-          url,
-        );
+        console.log('DATABASE_URL type:', typeof url, 'value:', url);
         console.log(
           'DATABASE_USERNAME type:',
           typeof url.username,
@@ -39,7 +34,6 @@ import { ScheduleEntity } from '../entities/schedule.entity';
           url.password,
         );
         console.log('==================================');
-
 
         return {
           type: 'postgres',
