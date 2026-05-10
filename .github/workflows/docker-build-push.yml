@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - master
-      - review-2
+      - master      
   pull_request:
     branches:
       - main
